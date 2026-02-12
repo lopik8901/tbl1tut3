@@ -63,6 +63,8 @@ def manual(msg, limit=20):
                     break
         else:
             current+=char
+    if current and len(words) < limit:
+    words.append(current)
     return ' '.join(words)
 
 def limit_words_recursive(words, limit):
