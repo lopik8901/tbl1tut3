@@ -50,46 +50,46 @@
         <div class="output-panel">
           <div class="card">
             <h2>Solution 1: limit_words (optimal)</h2>
-            <p class="muted">Split into words, keep the first 20.</p>
+            <p class="muted">
+              Split once and return both the allowed portion and remainder.
+            </p>
             <pre><code class="language-python">def limit_words(message, limit=20):
-    words = message.split()
-    if len(words) <= limit:
-        return message
-    return " ".join(words[:limit])</code></pre>
+    return ' '.join(message.split(maxsplit=limit)[0:limit]), ' '.join(message.split(maxsplit=limit)[limit:])</code></pre>
             <div class="result" id="limitOut"></div>
           </div>
 
           <div class="card">
             <h2>Solution 2: manual (no split)</h2>
-            <p class="muted">Scan characters and count word starts.</p>
+            <p class="muted">Scan characters and build words manually.</p>
             <pre><code class="language-python">def manual(message, limit=20):
-    count = 0
-    in_word = False
-    for i, ch in enumerate(message):
-        if ch.isspace():
-            in_word = False
-            continue
-        if not in_word:
-            count += 1
-            if count == limit + 1:
-                return message[:i].rstrip()
-            in_word = True
-    return message</code></pre>
+    words=[]
+    current=''
+
+    for char in message:
+        if char.isspace():
+            if current:
+                words.append(current)
+                current = ''
+                if len(words)==limit:
+                    break
+        else:
+            current+=char
+    if current and len(words) < limit:
+    words.append(current)
+    return ' '.join(words)</code></pre>
             <div class="result" id="manualOut"></div>
           </div>
 
           <div class="card">
             <h2>Solution 3: recursive</h2>
-            <p class="muted">Build the first 20 words via recursion.</p>
-            <pre><code class="language-python">def recursive_limit(message, limit=20):
-    words = message.split()
+            <p class="muted">Recursively build the allowed words.</p>
+            <pre><code class="language-python">def limit_words_recursive(words, limit):
+    if not words or limit == 0:
+        return []
+    return [words[0]] + limit_words_recursive(words[1:], limit-1)
 
-    def helper(index, acc):
-        if index >= len(words) or len(acc) == limit:
-            return acc
-        return helper(index + 1, acc + [words[index]])
-
-    return " ".join(helper(0, []))</code></pre>
+def wrapper(text, limit=20):
+    return " ".join(limit_words_recursive(text.split(), limit))</code></pre>
             <div class="result" id="recursiveOut"></div>
 
             <div class="trace">

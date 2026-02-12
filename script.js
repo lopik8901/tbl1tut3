@@ -19,59 +19,59 @@ function limitChars(message, limit = 160) {
   return message.slice(0, limit);
 }
 
-function limit_words(message, limit = 20) {
-  const trimmed = message.trim();
-  if (!trimmed) {
-    return "";
-  }
-  const words = trimmed.split(/\s+/);
-  if (words.length <= limit) {
-    return message;
-  }
-  return words.slice(0, limit).join(" ");
-}
-
-function manual(message, limit = 20) {
-  let count = 0;
-  let inWord = false;
-  for (let i = 0; i < message.length; i += 1) {
-    const isSpace = /\s/.test(message[i]);
-    if (!isSpace && !inWord) {
-      count += 1;
-      if (count === limit + 1) {
-        return message.slice(0, i).trimEnd();
-      }
-      inWord = true;
-    }
-    if (isSpace) {
-      inWord = false;
-    }
-  }
-  return message;
-}
-
-function recursiveLimit(message, limit = 20) {
-  const trimmed = message.trim();
+function limit_words(msg, limit = 20) {
+  const trimmed = msg.trim();
   const words = trimmed ? trimmed.split(/\s+/) : [];
-  const steps = [];
+  const first = words.slice(0, limit).join(" ");
+  const rest = words.slice(limit).join(" ");
+  return [first, rest];
+}
 
-  function helper(index, acc) {
-    steps.push({
-      index,
-      accLen: acc.length,
-      next: index < words.length ? words[index] : null,
-    });
-    if (index >= words.length || acc.length === limit) {
-      return acc;
+function manual(msg, limit = 20) {
+  const words = [];
+  let current = "";
+
+  for (let i = 0; i < msg.length; i += 1) {
+    const char = msg[i];
+    if (/\s/.test(char)) {
+      if (current) {
+        words.push(current);
+        current = "";
+        if (words.length === limit) {
+          break;
+        }
+      }
+    } else {
+      current += char;
     }
-    return helper(index + 1, acc.concat(words[index]));
   }
+  return words.join(" ");
+}
 
-  const resultWords = helper(0, []);
-  return {
-    result: resultWords.join(" "),
-    steps,
-  };
+function limit_words_recursive(words, limit, steps = null) {
+  if (steps) {
+    steps.push({
+      remaining: words.length,
+      next: words.length ? words[0] : null,
+      limit,
+    });
+  }
+  if (!words.length || limit === 0) {
+    return [];
+  }
+  return [words[0]].concat(limit_words_recursive(words.slice(1), limit - 1, steps));
+}
+
+function wrapper(text, limit = 20) {
+  const words = text.trim() ? text.trim().split(/\s+/) : [];
+  return limit_words_recursive(words, limit).join(" ");
+}
+
+function wrapperWithTrace(text, limit = 20) {
+  const words = text.trim() ? text.trim().split(/\s+/) : [];
+  const steps = [];
+  const result = limit_words_recursive(words, limit, steps).join(" ");
+  return { result, steps };
 }
 
 function countWordsManual(message) {
@@ -106,7 +106,7 @@ function renderTrace(steps, limit) {
   const showSteps = steps.slice(0, maxSteps);
 
   showSteps.forEach((step, idx) => {
-    const isStop = step.next === null || step.accLen >= limit;
+    const isStop = step.next === null || step.limit === 0 || step.remaining === 0;
     const item = document.createElement("div");
     item.className = `trace-item${isStop ? " stop" : ""}`;
 
@@ -115,15 +115,13 @@ function renderTrace(steps, limit) {
     stepEl.textContent = `#${idx + 1}`;
 
     const actionEl = document.createElement("span");
-    actionEl.textContent = isStop
-      ? "stop"
-      : `take "${step.next}"`;
+    actionEl.textContent = isStop ? "stop" : `take "${step.next}"`;
 
     const detailEl = document.createElement("span");
     detailEl.className = "muted";
     detailEl.textContent = isStop
-      ? `${step.accLen} words kept`
-      : `${step.accLen + 1} words kept`;
+      ? `${Math.max(limit - step.limit, 0)} words kept`
+      : `${Math.max(limit - step.limit + 1, 1)} words kept`;
 
     item.append(stepEl, actionEl, detailEl);
     traceList.appendChild(item);
@@ -157,10 +155,12 @@ function update() {
   }
 
   setResult(charsOut, limitChars(message, 160));
-  setResult(limitOut, limit_words(message, 20));
+  const [first, rest] = limit_words(message, 20);
+  const limitText = `Allowed: ${first || "(empty)"}\n\nRemainder: ${rest || "(none)"}`;
+  setResult(limitOut, limitText);
   setResult(manualOut, manual(message, 20));
 
-  const recursiveResult = recursiveLimit(message, 20);
+  const recursiveResult = wrapperWithTrace(message, 20);
   setResult(recursiveOut, recursiveResult.result);
   renderTrace(recursiveResult.steps, 20);
 }
