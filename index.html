@@ -1,0 +1,109 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Message Limit Solutions</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container">
+        <div class="badge">Presentation Demo</div>
+        <h1>Message Limits: 160 Characters, 20 Words</h1>
+        <p>
+          Three word-limit strategies plus the character cap, all side by side.
+          Type in a message and watch the outputs update.
+        </p>
+        <div class="hero-actions">
+          <button class="btn primary" id="sampleBtn">Load sample</button>
+          <button class="btn ghost" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="panel">
+        <div class="card input-panel">
+          <h2>Message input</h2>
+          <textarea
+            id="message"
+            rows="8"
+            placeholder="Type or paste a message here..."
+          ></textarea>
+          <div class="stats">
+            <span class="pill" id="charCount">0 chars</span>
+            <span class="pill" id="wordCount">0 words</span>
+            <span class="pill" id="charLimitFlag">fits 160</span>
+          </div>
+
+          <div class="card mini">
+            <h3>160 character cap</h3>
+            <p class="muted">
+              Returns the message if it is 160 characters or less; otherwise
+              trims to the first 160 characters.
+            </p>
+            <div class="result" id="charsOut"></div>
+          </div>
+        </div>
+
+        <div class="output-panel">
+          <div class="card">
+            <h2>Solution 1: limit_words (optimal)</h2>
+            <p class="muted">Split into words, keep the first 20.</p>
+            <pre><code class="language-python">def limit_words(message, limit=20):
+    words = message.split()
+    if len(words) <= limit:
+        return message
+    return " ".join(words[:limit])</code></pre>
+            <div class="result" id="limitOut"></div>
+          </div>
+
+          <div class="card">
+            <h2>Solution 2: manual (no split)</h2>
+            <p class="muted">Scan characters and count word starts.</p>
+            <pre><code class="language-python">def manual(message, limit=20):
+    count = 0
+    in_word = False
+    for i, ch in enumerate(message):
+        if ch.isspace():
+            in_word = False
+            continue
+        if not in_word:
+            count += 1
+            if count == limit + 1:
+                return message[:i].rstrip()
+            in_word = True
+    return message</code></pre>
+            <div class="result" id="manualOut"></div>
+          </div>
+
+          <div class="card">
+            <h2>Solution 3: recursive</h2>
+            <p class="muted">Build the first 20 words via recursion.</p>
+            <pre><code class="language-python">def recursive_limit(message, limit=20):
+    words = message.split()
+
+    def helper(index, acc):
+        if index >= len(words) or len(acc) == limit:
+            return acc
+        return helper(index + 1, acc + [words[index]])
+
+    return " ".join(helper(0, []))</code></pre>
+            <div class="result" id="recursiveOut"></div>
+
+            <div class="trace">
+              <div class="trace-header">
+                <span>Recursion trace</span>
+                <span id="traceNote" class="muted"></span>
+              </div>
+              <div id="traceList" class="trace-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
