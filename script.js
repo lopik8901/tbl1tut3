@@ -10,7 +10,7 @@ const traceList = document.getElementById("traceList");
 const traceNote = document.getElementById("traceNote");
 
 const sampleMessage =
-  "When I present tomorrow I want a clear practical demo that shows how a chat app trims messages by words and characters while keeping the output readable and precise for users watching the walkthrough.";
+  "Our world today faces two intertwined problems: the depletion of fossil fuels and widespread environmental degradation. They branch from how our economy is built. In our linear “take-make-waste” economy, we extract materials from the Earth, turn them into products, and then throw them away. This one-way model relies heavily on fossil fuels and leaves behind mountains of waste. The chemical industry sits right at the center of this system: powering it, supplying it, and amplifying both problems. In its current state, it is unsustainable.";
 
 function limitChars(message, limit = 160) {
   if (message.length <= limit) {
